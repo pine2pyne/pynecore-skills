@@ -94,5 +94,6 @@ Python 3.11+ environment and call it by path.
   2026-11-09: the maintainer states the runtime fixes are in PyneCore 6.13.2 and the compiler
   fixes are live on the server) and #108 (open).
 - The output is checked, not trusted: SKILL.md section 3.3 verifies every generated file
-  against the PyneCore specification before it runs, and section 3.2 ports by hand what a
-  given pine2pyne version does not convert. Neither step needs the cloud.
+  against the PyneCore specification before it runs, section 3.2 ports by hand what a given
+  pine2pyne version does not convert, and section 3.4 records every discrepancy in the
+  project's `docs/pynecore_vs_pine.md`. None of these steps needs the cloud.

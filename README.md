@@ -190,7 +190,8 @@ skills/
 │   ├── SKILL.md                      # the local-transpiler rule, the install rule, convert / port by hand / verify / run
 │   ├── references/                   # cli (options, output, profiles, Python API),
 │   │                                 # cloud-compiler-override (what in a project points to the cloud and what to do)
-│   └── scripts/                      # check_install.py (right distribution and version, --fix), convert.py (into a workdir)
+│   ├── scripts/                      # check_install.py (right distribution and version, --fix), convert.py (into a workdir)
+│   └── templates/pynecore_vs_pine.md # the project's discrepancy log, created on the first finding
 └── pynecore-practice/
     ├── SKILL.md                      # content/<name>.pine -> scripts/<name>.py -> pyne run; rules, toml overrides, git, PyneIDE
     ├── references/                   # getting-started (how to write the Pine so it converts and runs),

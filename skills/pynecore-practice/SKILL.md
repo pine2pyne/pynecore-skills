@@ -1,7 +1,7 @@
 ---
 name: pynecore-practice
 license: MIT
-description: "The Pine-first way to write PyneCore strategies, indicators and libraries: author the Pine Script in `content/<name>.pine` (libraries in `content/lib/<user>/<Name>/v<N>.pine`), generate the same-named Pyne script `scripts/<name>.py` with the local pine2pyne, verify it against PyneCore, run it with `pyne run <name>.py <data>`, and iterate in the Pine source only. Use whenever a task says write / create / change a strategy or indicator in a project that has a `content/` folder, mentions `content/`, 'Pine-first', 'generate the script and run it', asks to add an input or change the logic of a strategy that exists as a `.pine`, or when a `.pine` and a same-named `.py` are both present. Covers the layout, the one helper that converts, checks and runs, the `scripts/<name>.toml` override rule, libraries, what to commit, PyneIDE interplay, what to do when a source does not convert, how to record generator or PyneCore problems in the project's `docs/pynecore_vs_pine.md`, and how to report. Self-contained: carries the full pine2pyne install-and-use guide and its install checker."
+description: "The Pine-first way to write PyneCore strategies, indicators and libraries: author the Pine Script in `content/<name>.pine` (libraries in `content/lib/<user>/<Name>/v<N>.pine`), generate the same-named `scripts/<name>.py` with the local pine2pyne, verify it against PyneCore, run it with `pyne run <name>.py <data>`, and iterate in the Pine only. Use whenever a task writes or changes a strategy or indicator in a project with a `content/` folder, mentions `content/` or 'Pine-first', asks to add an input or change the logic of a strategy kept as `.pine`, or when a `.pine` and a same-named `.py` both exist. Covers the layout, the helper that converts, checks and runs, `scripts/<name>.toml` overrides, libraries, what to commit, PyneIDE and its agent files, porting by hand, recording problems in `docs/pynecore_vs_pine.md`, and reporting. Self-contained: carries the pine2pyne install-and-use guide and its install checker."
 ---
 
 # Pine-first: `content/<name>.pine` → `scripts/<name>.py` → `pyne run`
@@ -168,6 +168,7 @@ names the row (`// pynecore_vs_pine #3`), so the next conversion carries it. Rep
 upstream when it is reproducible (pine2pyne: <https://github.com/pine2pyne/pine2pyne/issues>;
 PyneCore: <https://github.com/PyneSys/pynecore/issues>) and put the link in the row; when a
 newer version removes the problem, say so in the row and drop the workaround from the Pine.
+The `pynecore-pine2pyne` skill requires the same file in the same format (its section 3.4).
 
 ## 5. Patch the project's agent files so they say pine2pyne
 

@@ -211,6 +211,10 @@ def main(argv: list[str] | None = None) -> int:
             print("run: PYNE_NO_LOGO=1 pyne --workdir " + str(workdir) + " run " + scripts[0].name + " <data>")
     if len(inputs) > 1:
         print(f"Summary: {len(inputs) - failed} succeeded, {failed} failed")
+    if failed:
+        print("note: a source TradingView compiles that was not converted is a discrepancy: record it in "
+              "docs/pynecore_vs_pine.md (SKILL.md section 3.4, template templates/pynecore_vs_pine.md) "
+              "before rewriting or porting it")
     return 1 if failed else 0
 
 

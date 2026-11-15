@@ -2,7 +2,7 @@
 name: pynecore-pine2pyne
 license: MIT
 compatibility: "Python 3.11+ and the PyPI package pine2pyne>=0.2.11 (PyneCore only to run the result). Sections 3.2, 3.3 and 5 read the sibling skills pynecore-strategy, pynecore-docs, pynecore-cli and pynecore-ide installed next to this one, as install.sh and the plugin do; a stand-alone copy of this skill loses those references."
-description: "Convert TradingView Pine Script (v4, v5, v6 indicators, strategies, libraries) to PyneCore Python with pine2pyne, the free offline open-source transpiler (PyPI `pine2pyne` 0.2.11+), verify the result against the PyneCore specification and run it with `pyne run`. Use whenever a task involves a `.pine` file, Pine Script, a TradingView script or library, 'convert / transpile / compile / port this to PyneCore (Pyne, Python)', `pine2pyne`, `pyne compile`, PyneComp, `@pyne edge`, a PyneSys API key or compile quota, PyneIDE's Compile / Run Pine Script commands, a `lib.<user>.<Name>.v<N>` import, or pine2pyne output ('Pine refuses', 'Unsupported feature', '⚠'). Overrides project files that route Pine sources to the PyneSys cloud compiler: conversions run locally, an unconvertible source is ported to Pyne by hand; `pyne compile`, `pyne run <file>.pine` and the IDE's Pine commands only when the user asks for the cloud compiler by name, after one line on what is uploaded. `opencode-pine2pyne` is never used."
+description: "Convert TradingView Pine Script (v4-v6 indicators, strategies, libraries) to PyneCore Python with pine2pyne, the free offline open-source transpiler (PyPI `pine2pyne` 0.2.11+), verify the result against the PyneCore specification, run it with `pyne run`, and record every discrepancy of the generated code or of PyneCore against Pine in the project's `docs/pynecore_vs_pine.md`. Use whenever a task involves a `.pine` file, Pine Script, a TradingView script or library, converting or porting it to PyneCore, `pine2pyne`, `pyne compile`, PyneComp, `@pyne edge`, a PyneSys API key, PyneIDE's Pine commands, a `lib.<user>.<Name>.v<N>` import, pine2pyne output ('Pine refuses', 'Unsupported feature', '⚠') or `docs/pynecore_vs_pine.md`. Overrides project files that route Pine to the PyneSys cloud compiler: conversions run locally, an unconvertible source is ported by hand; the cloud only when the user asks for it by name. `opencode-pine2pyne` is never used."
 ---
 
 # pine2pyne: Pine Script to PyneCore, on this machine
@@ -108,13 +108,14 @@ To run the generated scripts you need PyneCore in a project environment: `pip in
 6.12.1 and 6.13.2 with `ModuleNotFoundError: No module named 'typer._types'`; 0.28.0 works).
 The transpiler itself does not need PyneCore, so it can live in a tool environment.
 
-## 3. Workflow: convert, port by hand if needed, verify against PyneCore, run
+## 3. Workflow: convert, port by hand if needed, verify against PyneCore, record discrepancies, run
 
 ```bash
 python3 <skill>/scripts/check_install.py                   # 1. the right transpiler is installed
 pine2pyne my_script.pine -o <workdir>/scripts/my_script.py # 2. convert; ✓ line on stdout, errors on stderr, exit 1 on failure
 #                                                            3. read the generated .py and verify it against PyneCore (3.3)
 PYNE_NO_LOGO=1 pyne --workdir <workdir> run my_script.py demo   # 4. run the .py (suffix!) on data
+#                                                            5. every discrepancy found in 2-4 -> a row in ./docs/pynecore_vs_pine.md (3.4)
 ```
 
 Or, in one step with the helper, which also places libraries and reports what is missing:
@@ -159,7 +160,7 @@ message, it names the Pine line and column:
 |---------------|---------|----|
 | `Error at L:C: Pine refuses: <text> [<code>]` | The source breaks a rule TradingView's compiler enforces too (the text says which) | Fix the Pine source as the text says, re-convert |
 | `Error at L:C: Unexpected token ...`, `Expected ..., got ...` (optionally followed by `after repairing it as valid Pine, the source stops at: ...`) | A syntax error; the second line, when present, points at the real spot | Fix the syntax, re-convert |
-| `Error at L:C: Unsupported feature: <text>`, any other `Error at ...`, `Unexpected error` | A construct this pine2pyne version does not convert | Rewrite that construct in Pine when the text suggests a rewrite and re-convert; otherwise **port the script by hand** (below) |
+| `Error at L:C: Unsupported feature: <text>`, any other `Error at ...`, `Unexpected error` | A construct this pine2pyne version does not convert | Record it in `docs/pynecore_vs_pine.md` (3.4); rewrite that construct in Pine when the text suggests a rewrite and re-convert; otherwise **port the script by hand** (below) |
 
 Porting by hand means writing the Pyne script yourself from the `.pine`, with the
 `pynecore-strategy` skill (`../pynecore-strategy/SKILL.md` and its `references/language.md`,
@@ -178,9 +179,10 @@ scripts/<name>.py --root <project>` reports every violation with the gate of the
 PyneCore (a script that merely runs proves nothing: the gate is silent unless
 `PYNE_TYPE_DIAG=1` / `PYNE_EDGE_STRICT=1` is set and the bytecode cache is cold). Keep the
 original `.pine` next to the result as the reference, say in the report that the file was
-ported by hand and which construct forced it, and keep pine2pyne's message: the project is
-updated often, so the next version may convert the source as is (retry after `pip install -U
-pine2pyne`).
+ported by hand and which construct forced it, and keep pine2pyne's message in the row of
+`docs/pynecore_vs_pine.md` that records the port (3.4): the project is updated often, so the
+next version may convert the source as is (retry after `pip install -U pine2pyne` and note the
+result in the row).
 
 ### 3.3 Verify the generated script against the PyneCore specification
 
@@ -211,9 +213,53 @@ Pine logic says. A mismatch is fixed in the Pine source and re-converted (prefer
 Python; a hand-edited `.py` is from then on a hand-maintained Pyne script, so say so and stop
 re-converting over it. If the user has TradingView's numbers for the same bars, compare them
 (the `pynecore-strategy` skill's `run_backtest.py` and `summarize_backtest.py` print the
-figures).
+figures). A check above that fails although the Pine source is correct, and a run result that
+differs from what the Pine says or from TradingView, is a discrepancy: record it (3.4) before
+working around it.
 
-### 3.4 Run and report
+### 3.4 Record every discrepancy in `./docs/pynecore_vs_pine.md` (mandatory)
+
+Every discrepancy found while converting, verifying or running is written into the project's
+**`docs/pynecore_vs_pine.md`**, at the moment it is found, before it is worked around. The file
+lives in the project root (the folder that holds the workdir, or the workdir itself when it is
+the root) and is created from this skill's template on the first finding; an existing file is
+never overwritten, rows are appended:
+
+```bash
+mkdir -p docs && [ -e docs/pynecore_vs_pine.md ] || cp <skill>/templates/pynecore_vs_pine.md docs/pynecore_vs_pine.md
+```
+
+What is a discrepancy, and where its row goes:
+
+| Found in | What happened | Row |
+|----------|---------------|-----|
+| 3.2 | pine2pyne refused a construct TradingView compiles (`Unsupported feature`, another `Error at ...`, `Unexpected error`), or wrote nothing for non-comment source | Section 2: the construct, pine2pyne's exact message in "What pine2pyne wrote", the fix in force (the Pine rewrite that converts, or the hand port) |
+| 3.2 | `Pine refuses ... [code]` for a source the user shows TradingView compiles | Section 2, with the TradingView evidence in the basis (a refusal of source TradingView also refuses is not a discrepancy: fix the Pine) |
+| 3.3 | A check of the PyneCore specification fails in code pine2pyne wrote: a decorator argument or input PyneCore does not accept, an import that does not execute, a wrong `ta.*` / `strategy.*` name or argument, an edge-gate finding (`edge_check.py`) in a generated part, Pine syntax left in the output, a block temporary not assigned on a path | Section 2: the line of the generated `.py`, what the specification says (page), the fix in force |
+| 3.3, 3.5 | The generated `.py` fails to load (`SyntaxError`, `NameError`, `ImportError`) or raises on a bar (`TypeError`, `IndexError`, `UnboundLocalError`, ...) | Section 2: the exact message and the bar, the Pine construct it traces to |
+| 3.3, 3.5 | A plot, trade or figure differs from what the Pine logic says, traced to the generated code (a lost branch, a wrong cast, a renamed name read in the wrong scope) | Section 2: the two values and where they come from |
+| 3.5 | The generated code spells the Pine faithfully, yet PyneCore computes differently from the same script on the same bars on TradingView, or raises on valid Pyne | Section 1: in Pine, in PyneCore, the workaround written into the Pine source, the measurement |
+| anywhere | A difference suspected but not measured on TradingView | Section 3 (a bullet), moved to 1 or 2 once measured |
+
+Not a discrepancy: a mistake in the Pine source; a rule TradingView enforces too; a mistake in a
+part written by hand during a port (fix it).
+
+What every row carries: a minimal reproduction (inline, or `docs/probes/<id>.pine` converted
+with `pine2pyne docs/probes/<id>.pine -o docs/probes/<id>.py` and run with
+`pyne run docs/probes/<id>.py demo`; the probe's `.toml` and `__pycache__/` land next to it,
+outputs go to `output/`), the exact message or the two figures, the versions
+(`pine2pyne --version`; `python -c "import importlib.metadata as m; print(m.version('pynesys-pynecore'))"`),
+the date, and the fix in force. The workaround goes into the Pine source with a comment naming
+the row (`// pynecore_vs_pine #3`), so the next conversion carries it; in a hand-maintained
+`.py` the comment is `# pynecore_vs_pine #3`. Report a reproducible finding upstream
+(pine2pyne: <https://github.com/pine2pyne/pine2pyne/issues>; PyneCore:
+<https://github.com/PyneSys/pynecore/issues>) when the user agrees, and put the link in the row.
+Rows are dated observations tied to versions: when a newer pine2pyne or PyneCore removes the
+problem, say so in the row and drop the workaround; the row stays. A task that converted, verified
+or ran Pine code is not finished while a discrepancy it found is missing from the file. (The
+`pynecore-practice` skill writes the same file in the same format.)
+
+### 3.5 Run and report
 
 - **Run the `.py`, never the `.pine`.** `pyne run my_script.py demo`, or the file directly:
   `python scripts/my_script.py data/demo.ohlcv` (the generated `__main__` footer accepts one
@@ -221,8 +267,9 @@ figures).
   name `pyne run my_script demo` is safe only while no `scripts/my_script.pine` exists.
 - **Report** the pine2pyne version (`pine2pyne --version`), the exact command, every warning or
   refusal with its text, whether the file was generated or ported by hand, which library files
-  were placed, what the verification of 3.3 found and changed, and the run that proved the
-  output works (data file, bars, `output/<name>_strat.csv` numbers for a strategy).
+  were placed, what the verification of 3.3 found and changed, every row added to or changed in
+  `docs/pynecore_vs_pine.md` (3.4), and the run that proved the output works (data file, bars,
+  `output/<name>_strat.csv` numbers for a strategy).
 
 ## 4. What a generated file looks like
 
@@ -281,6 +328,7 @@ that gate with no finding; keep the header, and keep hand edits inside the profi
 | `references/cloud-compiler-override.md` | Everything in a project that points to the cloud compiler (`pyne run` name resolution, `config/api.toml`, PyneIDE commands and `.py.map`, generated `AGENTS.md` and IDE skills) and what to do instead |
 | `scripts/check_install.py` | Verify the installed distribution is `pine2pyne` >= 0.2.11 and not `opencode-pine2pyne`; `--fix` uninstalls both names and installs the right one (never into a PyneIDE-managed `.pyneide/venv`); `--json` |
 | `scripts/edge_check.py` | Run the edge gate of the project's PyneCore on `.py` files without running them and without the bytecode cache: profile revision, header mode and every finding; exit 1 on a finding; `--root`, `--python`, `--json` |
+| `templates/pynecore_vs_pine.md` | The project's `docs/pynecore_vs_pine.md`, created on the first discrepancy (3.4): runtime differences, generator problems, not-measured list, where things are |
 | `scripts/convert.py` | Transpile sources into a workdir (`scripts/` or `scripts/lib/<user>/<Name>/v<N>.py` with `--lib`), report missing library modules, stale `.py.map` files and a same-stem `.pine` in `scripts/`, print the run command |
 
 A project that keeps its Pine sources in `content/` and generates same-named scripts in
